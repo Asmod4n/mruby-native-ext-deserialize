@@ -13,7 +13,7 @@ mrb_native_ext_deserialize(mrb_state* mrb, mrb_value self)
   mrb_sym name;
   mrb_value type;
 
-  mrb_get_args(mrb, "nc", &name, &type);
+  mrb_get_args(mrb, "no", &name, &type);
 
   mrb_value schema = mrb_iv_get(mrb, self, MRB_SYM(__native_ext_deserialize__));
   if (mrb_nil_p(schema)) {
