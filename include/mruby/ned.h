@@ -7,6 +7,6 @@
 MRB_BEGIN_DECL
 
 MRB_API mrb_value
-mrb_ned_schema(mrb_state* mrb, struct RClass* klass);
+mrb_net_schema(mrb_state* mrb, struct RClass* klass);
 
 MRB_END_DECL
