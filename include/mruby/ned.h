@@ -27,6 +27,6 @@ mrb_net_schema(mrb_state *mrb, struct RClass *klass);
  * Never raises — the caller is responsible for producing a meaningful error.
  */
 MRB_API mrb_bool
-mrb_ned_check_type(mrb_state *mrb, mrb_value schema_type, mrb_value actual);
+mrb_net_check_type(mrb_state *mrb, mrb_value schema_type, mrb_value actual);
 
 MRB_END_DECL

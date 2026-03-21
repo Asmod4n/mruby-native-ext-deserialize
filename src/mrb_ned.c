@@ -4,7 +4,7 @@
 #include <mruby/variable.h>
 #include <mruby/presym.h>
 #include <mruby/error.h>
-
+#include <mruby/array.h>
 #include <mruby/ned.h>
 
 /*
@@ -28,24 +28,27 @@
 static mrb_value
 mrb_native_ext_type(mrb_state *mrb, mrb_value self)
 {
-  mrb_sym   name;
-  mrb_value type;
+  mrb_sym ivar;
+  mrb_value *types;
+  mrb_int ntypes;
+  mrb_get_args(mrb, "n*", &ivar, &types, &ntypes);
 
-  mrb_get_args(mrb, "no", &name, &type);
+  if (ntypes == 0)
+    mrb_raise(mrb, E_ARGUMENT_ERROR, "native_ext_type requires at least one type");
 
-  if (!mrb_class_p(type) && !mrb_module_p(type)) {
-    mrb_raise(mrb, E_TYPE_ERROR,
-      "native_ext_type: second argument must be a Class or Module");
+  for (mrb_int i = 0; i < ntypes; i++) {
+    if (!mrb_class_p(types[i]) && !mrb_module_p(types[i]))
+      mrb_raisef(mrb, E_TYPE_ERROR,
+        "type argument %d is not a Class or Module", i + 1);
   }
 
-  mrb_value schema = mrb_iv_get(mrb, self, MRB_SYM(__native_ext_type__));
+  mrb_value schema = mrb_net_schema(mrb, mrb_class_ptr(self));
   if (mrb_nil_p(schema)) {
     schema = mrb_hash_new_capa(mrb, 16);
     mrb_iv_set(mrb, self, MRB_SYM(__native_ext_type__), schema);
   }
-
-  mrb_hash_set(mrb, schema, mrb_symbol_value(name), type);
-
+  mrb_value type_ary = mrb_ary_new_from_values(mrb, ntypes, types);
+  mrb_hash_set(mrb, schema, mrb_symbol_value(ivar), type_ary);
   return mrb_nil_value();
 }
 
@@ -56,14 +59,18 @@ mrb_net_schema(mrb_state *mrb, struct RClass *klass)
 }
 
 MRB_API mrb_bool
-mrb_ned_check_type(mrb_state *mrb, mrb_value schema_type, mrb_value actual)
+mrb_net_check_type(mrb_state *mrb, mrb_value schema_type, mrb_value actual)
 {
-  if (!mrb_class_p(schema_type) && !mrb_module_p(schema_type)) {
-    /* Schema was stored with a non-class value — programming error,
-       fail closed rather than accepting everything. */
-    return FALSE;
+  if (!mrb_array_p(schema_type)) return FALSE;
+
+  mrb_int len = RARRAY_LEN(schema_type);
+  mrb_value *ptr = RARRAY_PTR(schema_type);
+  for (mrb_int i = 0; i < len; i++) {
+    if ((mrb_class_p(ptr[i]) || mrb_module_p(ptr[i])) &&
+        mrb_obj_is_kind_of(mrb, actual, mrb_class_ptr(ptr[i])))
+      return TRUE;
   }
-  return mrb_obj_is_kind_of(mrb, actual, mrb_class_ptr(schema_type));
+  return FALSE;
 }
 
 void
@@ -73,13 +80,13 @@ mrb_mruby_native_ext_type_gem_init(mrb_state *mrb)
     mrb->class_class,
     MRB_SYM(native_ext_type),
     mrb_native_ext_type,
-    MRB_ARGS_REQ(2));
+    MRB_ARGS_REQ(2)|MRB_ARGS_REST());
 
   mrb_define_module_function_id(mrb,
     mrb->module_class,
     MRB_SYM(native_ext_type),
     mrb_native_ext_type,
-    MRB_ARGS_REQ(2));
+    MRB_ARGS_REQ(2)|MRB_ARGS_REST());
 }
 
 void
