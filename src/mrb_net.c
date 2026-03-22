@@ -45,7 +45,10 @@ mrb_native_ext_type(mrb_state *mrb, mrb_value self)
     mrb_iv_set(mrb, self, MRB_SYM(__native_ext_type__), schema);
   }
   mrb_value type_ary = mrb_ary_new_from_values(mrb, ntypes, types);
+  struct RBasic *schema_basic = mrb_basic_ptr(schema);
+  schema_basic->frozen = FALSE;
   mrb_hash_set(mrb, schema, mrb_symbol_value(ivar), type_ary);
+  schema_basic->frozen = TRUE;
   return mrb_nil_value();
 }
 
@@ -108,30 +111,31 @@ mrb_mruby_native_ext_type_gem_init(mrb_state *mrb)
     mrb_native_ext_type,
     MRB_ARGS_REQ(2)|MRB_ARGS_REST());
 
-  mrb_define_class_method_id(mrb, mrb->class_class,
+  mrb_define_method_id(mrb, mrb->class_class,
     MRB_SYM(net_schema),
     net_schema_rb,
     MRB_ARGS_NONE());
 
-  mrb_define_module_function_id(mrb, mrb->module_class,
+  mrb_define_method_id(mrb, mrb->module_class,
     MRB_SYM(net_schema),
     net_schema_rb,
     MRB_ARGS_NONE());
 
-  mrb_define_class_method_id(mrb, mrb->class_class,
+  mrb_define_method_id(mrb, mrb->class_class,
     MRB_SYM(net_check_type),
     net_check_type_rb,
     MRB_ARGS_REQ(2));
 
-  mrb_define_module_function_id(mrb, mrb->module_class,
+  mrb_define_method_id(mrb, mrb->module_class,
     MRB_SYM(net_check_type),
     net_check_type_rb,
     MRB_ARGS_REQ(2));
-  }
+}
 
 void
 mrb_mruby_native_ext_type_gem_final(mrb_state *mrb)
 {
+  (void)mrb;
 }
 
 MRB_END_DECL
