@@ -13,7 +13,7 @@ Gems like `mruby-cbor` and `mruby-msgpack` need to know which ivar should hold w
 Add to your `mrbgem.rake`:
 
 ```ruby
-spec.add_dependency 'mruby-native-ext-type', github: 'yourname/mruby-native-ext-type'
+spec.add_dependency 'mruby-native-ext-type', github: 'Asmod4n/mruby-native-ext-type'
 ```
 
 ## Ruby API
@@ -70,7 +70,7 @@ Person.net_check_type(:@name, 42)        # => false
 
 # Inheritance
 class Dog < Animal; end
-Person2.net_check_type(:@pet, Dog.new)   # => true  (Dog is kind_of? Animal)
+Person.net_check_type(:@pet, Dog.new)   # => true  (Dog is kind_of? Animal)
 
 # Union
 Pet.net_check_type(:@kind, Animal.new)   # => true

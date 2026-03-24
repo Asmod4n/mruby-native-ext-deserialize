@@ -42,9 +42,11 @@ mrb_native_ext_type(mrb_state *mrb, mrb_value self)
   mrb_value schema = mrb_net_schema(mrb, mrb_class_ptr(self));
   if (mrb_nil_p(schema)) {
     schema = mrb_hash_new_capa(mrb, 16);
+    mrb_gc_protect(mrb, schema);
     mrb_iv_set(mrb, self, MRB_SYM(__native_ext_type__), schema);
   }
   mrb_value type_ary = mrb_ary_new_from_values(mrb, ntypes, types);
+  mrb_gc_protect(mrb, type_ary);
   struct RBasic *schema_basic = mrb_basic_ptr(schema);
   schema_basic->frozen = FALSE;
   mrb_hash_set(mrb, schema, mrb_symbol_value(ivar), type_ary);
@@ -87,10 +89,10 @@ mrb_net_check_type(mrb_state *mrb, mrb_value schema_type, mrb_value actual)
   if (!mrb_array_p(schema_type)) return FALSE;
 
   mrb_int len = RARRAY_LEN(schema_type);
-  mrb_value *ptr = RARRAY_PTR(schema_type);
   for (mrb_int i = 0; i < len; i++) {
-    if ((mrb_class_p(ptr[i]) || mrb_module_p(ptr[i])) &&
-        mrb_obj_is_kind_of(mrb, actual, mrb_class_ptr(ptr[i])))
+    mrb_value v = mrb_ary_ref(mrb, schema_type, i);
+    if ((mrb_class_p(v) || mrb_module_p(v)) &&
+        mrb_obj_is_kind_of(mrb, actual, mrb_class_ptr(v)))
       return TRUE;
   }
   return FALSE;
